@@ -1,0 +1,4 @@
+
+# Point designate backend setup at us
+DESIGNATE_PLUGINS=$TOP_DIR/lib
+DESIGNATE_BACKEND_DRIVER=infoblox

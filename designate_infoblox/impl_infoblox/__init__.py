@@ -1,0 +1,64 @@
+# Copyright 2014 Infoblox
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+import base64
+
+from oslo_log import log as logging
+
+from designate import exceptions
+from designate.backend import base
+from designate.i18n import _LI
+from designate_infoblox.impl_infoblox.config import cfg
+from designate_infoblox.impl_infoblox import connector
+from designate_infoblox.impl_infoblox import object_manipulator
+
+LOG = logging.getLogger(__name__)
+
+
+class InfobloxBackend(base.Backend):
+    __plugin_name__ = 'infoblox'
+
+    def __init__(self, *args, **kwargs):
+        super(InfobloxBackend, self).__init__(*args, **kwargs)
+
+        self.infoblox = object_manipulator.InfobloxObjectManipulator(
+            connector.Infoblox(self.options))
+
+        for m in self.masters:
+            if m.port != 53:
+                raise exceptions.ConfigurationError(
+                    "Infoblox only supports mDNS instances on port 53")
+
+    def create_domain(self, context, domain):
+        LOG.info(_LI('Create Domain %r') % domain)
+
+        dns_net_view = self.infoblox.get_dns_view(context.tenant)
+        self.infoblox.create_zone_auth(
+            fqdn=domain['name'][0:-1],
+            dns_view=dns_net_view
+        )
+
+    def update_domain(self, context, domain):
+        LOG.info(_LI('Update Domain %r') % domain)
+
+        self.infoblox.update_zone_auth(
+            domain['name'][0:-1]
+        )
+
+    def delete_domain(self, context, domain):
+        LOG.info(_LI('Delete Domain %r') % domain)
+        self.infoblox.delete_zone_auth(domain['name'][0:-1])
+
+    def ping(self, context):
+        LOG.info(_LI('Ping'))
