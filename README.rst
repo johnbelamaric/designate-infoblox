@@ -2,7 +2,7 @@
 designate-infoblox
 ===============================
 
-OpenStack Boilerplate contains all the boilerplate you need to create an OpenStack package.
+Provides an integration between Designate and Infoblox grids.
 
 * Free software: Apache license
 * Documentation: http://docs.openstack.org/developer/designate-infoblox
