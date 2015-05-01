@@ -1,0 +1,7 @@
+[run]
+branch = True
+source = designate_infoblox
+omit = designate_infoblox/openstack/*
+
+[report]
+ignore-errors = True
