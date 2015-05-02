@@ -14,10 +14,9 @@
 #    under the License.
 
 
-import logging
 import gettext
+import logging
 
-from designate_infoblox.impl_infoblox.config import cfg
 from designate_infoblox.impl_infoblox import exceptions as exc
 
 _ = gettext.gettext
@@ -44,9 +43,11 @@ class InfobloxObjectManipulator(object):
         net_view_data = {'name': net_view_name}
         self._delete_infoblox_object('view', net_view_data)
 
-    def create_network_view(self, net_view_name):
+    def create_network_view(self, net_view_name, tenant_id):
         net_view_data = {'name': net_view_name}
-        return self._create_infoblox_object('networkview', net_view_data)
+        extattrs = {'extattrs': {'TenantID': tenant_id}}
+        return self._create_infoblox_object('networkview', net_view_data,
+                                            extattrs)
 
     def delete_network_view(self, net_view_name):
         if net_view_name == 'default':
@@ -75,21 +76,24 @@ class InfobloxObjectManipulator(object):
             check_if_exists=True)
 
     def get_dns_view(self, tenant):
-        if cfg.CONF['backend:infoblox'].multi_tenant:
+        if self.connector.multi_tenant:
+            net_view = "%s (%s)" % (self.connector.network_view, tenant)
+            dns_view = "%s.%s" % (self.connector.dns_view, net_view)
             try:
                 self.create_network_view(
-                    net_view_name=tenant)
+                    net_view_name=net_view,
+                    tenant_id=tenant)
 
                 self.create_dns_view(
-                    net_view_name=tenant,
-                    dns_view_name=tenant)
+                    net_view_name=net_view,
+                    dns_view_name=self.connector.dns_view)
             except Exception as e:
                 LOG.warning(
                     _("Issue happens during views creating: %s"), e)
 
-            return tenant
+            return dns_view
         else:
-            return cfg.CONF['backend:infoblox'].dns_view
+            return self.connector.dns_view
 
     def create_zone_auth(self, fqdn, dns_view):
         try:

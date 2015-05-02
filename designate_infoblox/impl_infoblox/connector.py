@@ -15,8 +15,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
 import json as jsonutils
+import logging
 import urllib
 import urlparse
 
@@ -30,16 +30,15 @@ LOG = logging.getLogger(__name__)
 
 
 class Infoblox(object):
-    """
-    Infoblox class
+    """Infoblox class
 
     Defines methods for getting, creating, updating and
     removing objects from an Infoblox server instance.
     """
 
     def __init__(self, options):
-        """
-        Initialize a new Infoblox object instance
+        """Initialize a new Infoblox object instance
+
         Args:
             options (dict): Target options dictionary
         """
@@ -51,6 +50,7 @@ class Infoblox(object):
         self.password = options.get('password') or config.password
         self.sslverify = options.get('sslverify') or config.sslverify
         self.ns_group = options.get('ns_group') or config.ns_group
+        self.multi_tenant = options.get('multi_tenant') or config.multi_tenant
 
         if not self.wapi or not self.username or not self.password:
             raise exc.InfobloxIsMisconfigured()
@@ -60,8 +60,8 @@ class Infoblox(object):
 
         self.session = requests.Session()
         adapter = requests.adapters.HTTPAdapter(
-            pool_connections= config.infoblox_http_pool_connections,
-            pool_maxsize= config.infoblox_http_pool_maxsize)
+            pool_connections=config.http_pool_connections,
+            pool_maxsize=config.http_pool_maxsize)
         self.session.mount('http://', adapter)
         self.session.mount('https://', adapter)
         self.session.auth = (self.username, self.password)
@@ -100,8 +100,8 @@ class Infoblox(object):
 
     def get_object(self, objtype, payload=None, return_fields=None,
                    extattrs=None):
-        """
-        Retrieve a list of Infoblox objects of type 'objtype'
+        """Retrieve a list of Infoblox objects of type 'objtype'
+
         Args:
             objtype  (str): Infoblox object type, e.g. 'view', 'tsig', etc.
             payload (dict): Payload with data to send
@@ -141,8 +141,8 @@ class Infoblox(object):
         return jsonutils.loads(r.content)
 
     def create_object(self, objtype, payload, return_fields=None):
-        """
-        Create an Infoblox object of type 'objtype'
+        """Create an Infoblox object of type 'objtype'
+
         Args:
             objtype  (str): Infoblox object type, e.g. 'network', 'range', etc.
             payload (dict): Payload with data to send
@@ -210,8 +210,8 @@ class Infoblox(object):
         return jsonutils.loads(r.content)
 
     def update_object(self, ref, payload):
-        """
-        Update an Infoblox object
+        """Update an Infoblox object
+
         Args:
             ref      (str): Infoblox object reference
             payload (dict): Payload with data to send
@@ -220,6 +220,7 @@ class Infoblox(object):
         Raises:
             InfobloxException
         """
+
         headers = {'Content-type': 'application/json'}
         r = self.session.put(self._construct_url(ref),
                              data=jsonutils.dumps(payload),
@@ -236,8 +237,8 @@ class Infoblox(object):
         return jsonutils.loads(r.content)
 
     def delete_object(self, ref):
-        """
-        Remove an Infoblox object
+        """Remove an Infoblox object
+
         Args:
             ref      (str): Object reference
         Returns:

@@ -12,14 +12,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import base64
-
 from oslo_log import log as logging
 
-from designate import exceptions
 from designate.backend import base
+from designate import exceptions
 from designate.i18n import _LI
-from designate_infoblox.impl_infoblox.config import cfg
 from designate_infoblox.impl_infoblox import connector
 from designate_infoblox.impl_infoblox import object_manipulator
 
@@ -27,6 +24,8 @@ LOG = logging.getLogger(__name__)
 
 
 class InfobloxBackend(base.Backend):
+    """Provides a Designate Backend for Infoblox"""
+
     __plugin_name__ = 'infoblox'
 
     def __init__(self, *args, **kwargs):
@@ -35,8 +34,8 @@ class InfobloxBackend(base.Backend):
         self.infoblox = object_manipulator.InfobloxObjectManipulator(
             connector.Infoblox(self.options))
 
-        for m in self.masters:
-            if m.port != 53:
+        for master in self.masters:
+            if master.port != 53:
                 raise exceptions.ConfigurationError(
                     "Infoblox only supports mDNS instances on port 53")
 
