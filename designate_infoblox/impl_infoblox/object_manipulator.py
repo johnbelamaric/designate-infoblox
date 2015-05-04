@@ -17,7 +17,7 @@
 import gettext
 import logging
 
-from designate_infoblox.impl_infoblox import exceptions as exc
+from designate_infoblox.impl_infoblox import ibexceptions as exc
 
 _ = gettext.gettext
 
@@ -45,9 +45,8 @@ class InfobloxObjectManipulator(object):
 
     def create_network_view(self, net_view_name, tenant_id):
         net_view_data = {'name': net_view_name}
-        extattrs = {'extattrs': {'TenantID': tenant_id}}
-        return self._create_infoblox_object('networkview', net_view_data,
-                                            extattrs)
+        #extattrs = {'extattrs': {'TenantID': { 'value': tenant_id}}}
+        return self._create_infoblox_object('networkview', net_view_data)
 
     def delete_network_view(self, net_view_name):
         if net_view_name == 'default':
@@ -77,7 +76,7 @@ class InfobloxObjectManipulator(object):
 
     def get_dns_view(self, tenant):
         if self.connector.multi_tenant:
-            net_view = "%s (%s)" % (self.connector.network_view, tenant)
+            net_view = "%s.%s" % (self.connector.network_view, tenant)
             dns_view = "%s.%s" % (self.connector.dns_view, net_view)
             try:
                 self.create_network_view(
@@ -86,11 +85,12 @@ class InfobloxObjectManipulator(object):
 
                 self.create_dns_view(
                     net_view_name=net_view,
-                    dns_view_name=self.connector.dns_view)
+                    dns_view_name=dns_view)
             except Exception as e:
                 LOG.warning(
                     _("Issue happens during views creating: %s"), e)
 
+            LOG.debug("net_view: %s, dns_view: %s" % (net_view, dns_view))
             return dns_view
         else:
             return self.connector.dns_view
@@ -98,10 +98,10 @@ class InfobloxObjectManipulator(object):
     def create_zone_auth(self, fqdn, dns_view):
         try:
             self._create_infoblox_object(
-                'zone_auth', {'fqdn': fqdn,
-                              'view': dns_view},
-                             {'ns_group': self.connector.ns_group,
-                              'restart_if_needed': True},
+                'zone_auth',
+                {'fqdn': fqdn, 'view': dns_view},
+                {'ns_group': self.connector.ns_group,
+                 'restart_if_needed': True},
                 check_if_exists=True)
         except exc.InfobloxCannotCreateObject as e:
             LOG.warning(e)

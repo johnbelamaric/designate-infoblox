@@ -18,7 +18,7 @@ if is_service_enabled designate-infoblox; then
     elif [[ "$1" == "stack" && "$2" == "install" ]]; then
         # Perform installation of service source
         echo_summary "Installing Infoblox Designate Backend"
-        sudo python setup.py install
+        cd $DESIGNATE_INFOBLOX_DIR; sudo python setup.py install
 
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
         # Configure after the other layer 1 and 2 services have been configured

@@ -32,7 +32,7 @@ OPTS = [
     cfg.IntOpt('http_pool_connections', default=100),
     cfg.IntOpt('http_pool_maxsize', default=100),
     cfg.StrOpt('dns_view', default='default'),
-    cfg.StrOpt('net_view', default='default'),
+    cfg.StrOpt('network_view', default='default'),
     cfg.StrOpt('ns_group')
 ]
 

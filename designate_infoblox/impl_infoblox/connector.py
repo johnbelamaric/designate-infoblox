@@ -23,7 +23,7 @@ import urlparse
 import requests
 
 from designate_infoblox.impl_infoblox.config import cfg
-from designate_infoblox.impl_infoblox import exceptions as exc
+from designate_infoblox.impl_infoblox import ibexceptions as exc
 
 
 LOG = logging.getLogger(__name__)
@@ -50,6 +50,8 @@ class Infoblox(object):
         self.password = options.get('password') or config.password
         self.sslverify = options.get('sslverify') or config.sslverify
         self.ns_group = options.get('ns_group') or config.ns_group
+        self.network_view = options.get('network_view') or config.network_view
+        self.dns_view = options.get('dns_view') or config.dns_view
         self.multi_tenant = options.get('multi_tenant') or config.multi_tenant
 
         if not self.wapi or not self.username or not self.password:

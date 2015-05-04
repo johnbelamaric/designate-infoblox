@@ -14,6 +14,14 @@ Features
 
 The Infoblox Designate integration allows an Infoblox grid to be used for serving zones controlled by OpenStack Designate.
 
+Devstack
+--------
+
+* Setup link to backend-infoblox
+
+Setup
+-----
+
 *Setting Up Infoblox for Designate*
 
 * Set up one or more name server groups to be used to serve designate zones.
