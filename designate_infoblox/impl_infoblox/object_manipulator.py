@@ -45,8 +45,9 @@ class InfobloxObjectManipulator(object):
 
     def create_network_view(self, net_view_name, tenant_id):
         net_view_data = {'name': net_view_name}
-        #extattrs = {'extattrs': {'TenantID': { 'value': tenant_id}}}
-        return self._create_infoblox_object('networkview', net_view_data)
+        extattrs = {'extattrs': {'TenantID': {'value': tenant_id}}}
+        return self._create_infoblox_object('networkview',
+                                            net_view_data, extattrs)
 
     def delete_network_view(self, net_view_name):
         if net_view_name == 'default':
@@ -74,26 +75,38 @@ class InfobloxObjectManipulator(object):
             'tsig', tsig,
             check_if_exists=True)
 
-    def get_dns_view(self, tenant):
-        if self.connector.multi_tenant:
+    def create_multi_tenant_dns_view(self, net_view, tenant):
+        if not net_view:
             net_view = "%s.%s" % (self.connector.network_view, tenant)
-            dns_view = "%s.%s" % (self.connector.dns_view, net_view)
-            try:
-                self.create_network_view(
-                    net_view_name=net_view,
-                    tenant_id=tenant)
+        dns_view = "%s.%s" % (self.connector.dns_view, net_view)
 
-                self.create_dns_view(
-                    net_view_name=net_view,
-                    dns_view_name=dns_view)
-            except Exception as e:
-                LOG.warning(
-                    _("Issue happens during views creating: %s"), e)
+        try:
+            self.create_network_view(
+                net_view_name=net_view,
+                tenant_id=tenant)
 
-            LOG.debug("net_view: %s, dns_view: %s" % (net_view, dns_view))
-            return dns_view
-        else:
+            self.create_dns_view(
+                net_view_name=net_view,
+                dns_view_name=dns_view)
+        except exc.InfobloxException as e:
+            LOG.warning(_("Issue happens during views creating: %s"), e)
+
+        LOG.debug("net_view: %s, dns_view: %s" % (net_view, dns_view))
+        return dns_view
+
+    def get_dns_view(self, tenant):
+        if not self.connector.multi_tenant:
             return self.connector.dns_view
+        else:
+            # Look for the network view with the specified TenantID EA
+            net_view = self._get_infoblox_object_or_none(
+                'networkview',
+                return_fields = ['name'],
+                extattrs={'TenantID': {'value': tenant}})
+            if net_view:
+                net_view = net_view['name']
+
+            return self.create_multi_tenant_dns_view(net_view, tenant)
 
     def create_zone_auth(self, fqdn, dns_view):
         try:
@@ -109,10 +122,6 @@ class InfobloxObjectManipulator(object):
     def delete_zone_auth(self, fqdn):
         self._delete_infoblox_object(
             'zone_auth', {'fqdn': fqdn})
-
-    def update_zone_auth(self, fqdn):
-        self._update_infoblox_object(
-            'zone_auth', {'fqdn': fqdn}, {})
 
     def _create_infoblox_object(self, obj_type, payload,
                                 additional_create_kwargs=None,
@@ -138,9 +147,10 @@ class InfobloxObjectManipulator(object):
 
         return ib_object
 
-    def _get_infoblox_object_or_none(self, obj_type, payload,
-                                     return_fields=None):
-        ib_object = self.connector.get_object(obj_type, payload, return_fields)
+    def _get_infoblox_object_or_none(self, obj_type, payload=None,
+                                     return_fields=None, extattrs=None):
+        ib_object = self.connector.get_object(obj_type, payload, return_fields,
+                                              extattrs=extattrs)
         if ib_object:
             if return_fields:
                 return ib_object[0]

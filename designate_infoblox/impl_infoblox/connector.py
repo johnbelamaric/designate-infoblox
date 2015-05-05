@@ -84,6 +84,7 @@ class Infoblox(object):
         if extattrs:
             attrs_queries = []
             for key, value in extattrs.items():
+                LOG.debug("key: %s, value: %s" % (key, value))
                 attrs_queries.append('*' + key + '=' + value['value'])
             query += '&'.join(attrs_queries)
         if query_params:

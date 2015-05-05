@@ -12,35 +12,47 @@ Provides an integration between Designate and Infoblox grids.
 Features
 --------
 
-The Infoblox Designate integration allows an Infoblox grid to be used for serving zones controlled by OpenStack Designate.
+The Infoblox Designate backend allows an Infoblox grid to be used for
+serving zones controlled by OpenStack Designate.
 
-Devstack
---------
+The Infoblox backend may be setup to map a specific Designate pool to
+a single DNS view, or it may be setup to map individual tenants to
+per-tenant DNS views.
 
-* Setup link to backend-infoblox
-
-Setup
------
+Configuration
+-------------
 
 *Setting Up Infoblox for Designate*
 
-* Set up one or more name server groups to be used to serve designate zones.
+* Create a user for use by Designate.
+* Set up one or more name server groups to be used to serve Designate zones.
      * Set the Designate mDNS servers as external primaries
-               * Q - can we do multi-master?
-     * Add a grid member as a grid secondary; select the "Lead Secondary" option for this member
+     * Add a grid member as a grid secondary; select the "Lead Secondary" option
+       for this member
      * Add additional grid secondaries as desired
-* Create a user for use by Designate
 
 *Setting Up Designate for Infoblox*
 
-* Install the Infoblox Designate backend driver
-* Designate may be configured to talk to any number of grid API services points (GM or Cloud appliance)
-     * A pool target is defined for each API service point that Designate should talk to
-     * A single Designate pool should point to only one API service point in any single grid
-     * It is OK to point a pool at multiple grids, just not to multiple service points on the same grid
-* The [infoblox:backend] stanza in the designate configuration file can be used to set default values for the grid connectivity and other information; these values can be overridden on a per-target basis with the "options" element of the target configuration.
-* Designate always puts any servers 
-
+* Install the Infoblox Designate backend driver.
+* Designate may be configured to talk to any number of grid API service points
+  (GM or Cloud appliance).
+   * Setup a pool for each combination of DNS view and nameserver group you wish
+     to manage.
+   * Setup a pool target for each API service point that Designate should talk
+     to.
+     * A single Designate pool should point to only one API service point in any
+       single grid. That is, do not point a pool at more than one API service
+       point in the same grid.
+     * It is OK to point a pool at multiple grids, just not to multiple service
+       points on the same grid.
+     * You may specify the DNS view and nameserver group on a per-target basis.
+* The [infoblox:backend] stanza in the designate configuration file can be used
+  to set default values for the grid connectivity and other information.
+* These values can be overridden on a per-target basis with the "options" 
+  element of the target configuration.
+* Designate always puts any servers associated with the pool as NS records for
+  the domain. So, if you wish for any Infoblox nameservers to be listed in NS
+  records, they must be added via Designate.
 
 *Example Designate Configuration*
 
@@ -57,7 +69,7 @@ Setup
  type = infoblox
  # wapi_url, username, password can all be overridden from the defaults
  # allowing targets to point to different grids
- options = net_view: default, dns_view: default, ns_group: Designate
+ options = dns_view: default, ns_group: Designate
 
  [pool_nameserver:ffedb95e-edc1-11e4-9ae6-000c29db281b]
  host=172.16.98.200
@@ -76,4 +88,44 @@ Setup
  username = admin
  multi_tenant = False
 
-* TODO
+Multi-tenant Configuration
+--------------------------
+
+When configured with ::multi_tenant = True:: in the designate.conf file, the
+DNS view will be chosen as follows:
+
+* A search will be made for a network view with the EA "TenantID", with the
+  value of the OpenStack tenant_id.
+* If found, then then DNS view used will be <dns_view>.<network_view>, where
+  <dns_view> is the value specified in designate.conf, and <network_view> is
+  the name of the view found in the search.
+* If no such network view is found, then a network view will be created with the
+  name <network_view>.<tenant_id>, where <network_view> is the value specified
+  in designate.conf. This network view will be tagged with the TenantID EA.
+* If the DNS view does not exist (in either case above), then it will be
+  created.
+
+Devstack
+--------
+
+* Setup link to backend-infoblox in the designate_plugins directory. Assuming
+  you install in /opt/stack, then:
+
+::
+$ cd /opt/stack/designate/contrib/devstack/lib/designate_plugins/
+$ ln -s /opt/stack/designate-infoblox/devstack/lib/backend-infoblox
+
+* Add (minimally) the following to your local.conf:
+
+::
+DESIGNATE_BACKEND_DRIVER=infoblox
+enable_plugin designate-infoblox https://github.com/johnbelamaric/designate-infoblox.git
+enable_service designate-infoblox
+
+
+TODO
+----
+
+* Evaluate feasibility of using multi-master.
+* Provide a synchronization mechanism.
+

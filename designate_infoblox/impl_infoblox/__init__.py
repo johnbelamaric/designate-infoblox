@@ -49,11 +49,8 @@ class InfobloxBackend(base.Backend):
         )
 
     def update_domain(self, context, domain):
+        # Since all updates are done via zone transfer, there is nothing to do
         LOG.info(_LI('Update Domain %r') % domain)
-
-        self.infoblox.update_zone_auth(
-            domain['name'][0:-1]
-        )
 
     def delete_domain(self, context, domain):
         LOG.info(_LI('Delete Domain %r') % domain)
