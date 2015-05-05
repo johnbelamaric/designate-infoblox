@@ -101,7 +101,7 @@ class InfobloxObjectManipulator(object):
             # Look for the network view with the specified TenantID EA
             net_view = self._get_infoblox_object_or_none(
                 'networkview',
-                return_fields = ['name'],
+                return_fields=['name'],
                 extattrs={'TenantID': {'value': tenant}})
             if net_view:
                 net_view = net_view['name']
