@@ -55,6 +55,7 @@ Configuration
   to set default values for the grid connectivity and other information.
 * These values can be overridden on a per-target basis with the "options" 
   element of the target configuration.
+* Set the mDNS port to 53 in the ``[service:mdns]`` stanza.
 * Designate always puts any servers associated with the pool as NS records for
   the domain. So, if you wish for any Infoblox nameservers to be listed in NS
   records, they must be added via Designate.
