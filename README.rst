@@ -96,7 +96,7 @@ Configuration
 Multi-tenant Configuration
 --------------------------
 
-When configured with ::multi_tenant = True:: in the designate.conf file, the
+When configured with ``multi_tenant = True`` in the designate.conf file, the
 DNS view will be chosen as follows:
 
 * A search will be made for a network view with the EA "TenantID", with the
