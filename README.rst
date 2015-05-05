@@ -117,12 +117,14 @@ Devstack
   you install in /opt/stack, then:
 
 ::
+
  $ cd /opt/stack/designate/contrib/devstack/lib/designate_plugins/
  $ ln -s /opt/stack/designate-infoblox/devstack/lib/backend-infoblox
 
 * Add (minimally) the following to your local.conf:
 
 ::
+
  DESIGNATE_BACKEND_DRIVER=infoblox
  enable_plugin designate-infoblox https://github.com/johnbelamaric/designate-infoblox.git
  enable_service designate-infoblox
