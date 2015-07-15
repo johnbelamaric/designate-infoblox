@@ -5,4 +5,4 @@
 pbr>=0.6,!=0.7,<1.0
 Babel>=1.3
 
-git+git://git.openstack.org/openstack/designate.git@stable/kilo#egg=designate-2015.1.1
+#git+git://git.openstack.org/openstack/designate.git@stable/kilo#egg=designate-2015.1.1
